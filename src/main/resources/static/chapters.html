@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>章节列表 - 小说系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 25px;
+            top: 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .novel-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .novel-info {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .chapters-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-count {
+            font-size: 0.8em;
+            color: #666;
+            background: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+
+        .chapter-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .chapter-item {
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .chapter-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: #e3f2fd;
+        }
+
+        .chapter-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .chapter-order {
+            color: #667eea;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state .icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .chapter-list {
+                grid-template-columns: 1fr;
+            }
+
+            .back-btn {
+                position: static;
+                margin-bottom: 15px;
+            }
+
+            .header {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">← 返回首页</button>
+            <div class="novel-title" id="novelTitle">加载中...</div>
+            <div class="novel-info" id="novelInfo">作者：加载中...</div>
+        </div>
+
+        <div class="chapters-container">
+            <div class="section-title">
+                📚 章节列表
+                <span class="chapter-count" id="chapterCount">0 章</span>
+            </div>
+            <div id="chaptersContainer">
+                <div class="loading">正在加载章节列表...</div>
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="refresh-btn" onclick="goToComments()" style="background: #28a745; margin-right: 10px;">
+                    💬 查看评论
+                </button>
+                <button class="refresh-btn" onclick="goBack()">
+                    🏠 返回首页
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API基础URL
+        const API_BASE = 'http://localhost:8081/api';
+
+        // 获取URL参数
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 获取小说信息
+        async function loadNovelInfo(storyId) {
+            try {
+                const response = await fetch(`${API_BASE}/story/list`);
+                const result = await response.json();
+
+                if (result.code === 200 && result.data) {
+                    const novel = result.data.find(n => n.id == storyId);
+                    if (novel) {
+                        document.getElementById('novelTitle').textContent = novel.name;
+                        document.getElementById('novelInfo').textContent = `作者：${novel.author}`;
+                        return novel;
+                    }
+                }
+            } catch (error) {
+                console.error('加载小说信息失败:', error);
+            }
+            return null;
+        }
+
+        // 加载章节列表
+        async function loadChapters(storyId) {
+            try {
+                const response = await fetch(`${API_BASE}/catalog/chapters/${storyId}`);
+                const result = await response.json();
+
+                const container = document.getElementById('chaptersContainer');
+                const countElement = document.getElementById('chapterCount');
+
+                if (result.code === 200 && result.data) {
+                    const chapters = result.data;
+                    countElement.textContent = `${chapters.length} 章`;
+
+                    if (chapters.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="icon">📖</div>
+                                <p>暂无章节</p>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = chapters.map((chapter, index) => `
+                            <div class="chapter-item" onclick="readChapter('${chapter.id}', '${chapter.title}')">
+                                <div class="chapter-title">${chapter.title}</div>
+                                <div class="chapter-order">第 ${chapter.sortOrder || index + 1} 章</div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    container.innerHTML = `
+                        <div class="error">
+                            <p>加载失败：${result.message}</p>
+                            <button class="refresh-btn" onclick="loadChapters(${storyId})">重新加载</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('chaptersContainer').innerHTML = `
+                    <div class="error">
+                        <p>网络错误：${error.message}</p>
+                        <button class="refresh-btn" onclick="loadChapters(${storyId})">重新加载</button>
+                    </div>
+                `;
+            }
+        }
+
+        // 阅读章节（跳转到阅读页面）
+        function readChapter(chapterId, chapterTitle) {
+            window.location.href = `read.html?chapterId=${encodeURIComponent(chapterId)}&chapterTitle=${encodeURIComponent(chapterTitle)}`;
+        }
+
+        // 跳转到评论页面
+        function goToComments() {
+            const storyId = getUrlParameter('storyId');
+            window.location.href = `comments.html?storyId=${storyId}`;
+        }
+
+        // 返回首页
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            const storyId = getUrlParameter('storyId');
+
+            if (!storyId) {
+                alert('缺少小说ID参数');
+                goBack();
+                return;
+            }
+
+            // 加载小说信息和章节列表
+            loadNovelInfo(storyId).then(() => {
+                loadChapters(storyId);
+            });
+        });
+    </script>
+</body>
+</html>

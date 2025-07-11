@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航 - 小说系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .nav-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .nav-link {
+            display: block;
+            padding: 15px 25px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            border: 2px solid #667eea;
+        }
+        
+        .nav-link:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .nav-link.secondary {
+            background: #28a745;
+            border-color: #28a745;
+        }
+        
+        .nav-link.secondary:hover {
+            background: white;
+            color: #28a745;
+        }
+        
+        .nav-link.info {
+            background: #17a2b8;
+            border-color: #17a2b8;
+        }
+        
+        .nav-link.info:hover {
+            background: white;
+            color: #17a2b8;
+        }
+        
+        .api-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+        }
+        
+        .api-info h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .api-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .api-method {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .api-method.get {
+            background: #28a745;
+            color: white;
+        }
+        
+        .api-method.post {
+            background: #007bff;
+            color: white;
+        }
+        
+        .api-method.delete {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-container">
+        <h1 class="nav-title">📚 小说系统</h1>
+        
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">🏠 首页 - 小说列表</a>
+            <a href="chapters.html?storyId=1" class="nav-link secondary">📖 章节列表示例</a>
+            <a href="comments.html?storyId=1" class="nav-link info">💬 评论页面示例</a>
+            <a href="test.html" class="nav-link" style="background: #ffc107; border-color: #ffc107; color: #333;">🔧 API测试页面</a>
+        </div>
+        
+        <div class="api-info">
+            <h3>🔗 API接口</h3>
+            <div class="api-item">
+                <span class="api-method get">GET</span>
+                <code>/api/story/list</code> - 查询所有小说
+            </div>
+            <div class="api-item">
+                <span class="api-method get">GET</span>
+                <code>/api/catalog/chapters/{storyId}</code> - 查询章节
+            </div>
+            <div class="api-item">
+                <span class="api-method get">GET</span>
+                <code>/api/comment/list/{storyId}</code> - 查询评论
+            </div>
+            <div class="api-item">
+                <span class="api-method post">POST</span>
+                <code>/api/comment/add</code> - 发表评论
+            </div>
+            <div class="api-item">
+                <span class="api-method delete">DELETE</span>
+                <code>/api/comment/delete/{commentId}</code> - 删除评论
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试 - 小说系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+        }
+
+        .test-title {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .test-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .test-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status.online {
+            background: #28a745;
+            color: white;
+        }
+
+        .status.offline {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🔧 API连接测试</h1>
+
+        <div class="test-section">
+            <div class="test-title">
+                服务器状态检查
+                <span id="serverStatus" class="status offline">离线</span>
+            </div>
+            <button class="test-btn" onclick="checkServerStatus()">检查服务器状态</button>
+            <div id="serverResult" class="result info">点击按钮检查服务器状态...</div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">小说列表API测试</div>
+            <button class="test-btn" onclick="testStoryList()">测试 /api/story/list</button>
+            <div id="storyResult" class="result info">点击按钮测试小说列表API...</div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">章节列表API测试</div>
+            <button class="test-btn" onclick="testChapterList()">测试 /api/catalog/chapters/1</button>
+            <div id="chapterResult" class="result info">点击按钮测试章节列表API...</div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">评论列表API测试</div>
+            <button class="test-btn" onclick="testCommentList()">测试 /api/comment/list/1</button>
+            <div id="commentResult" class="result info">点击按钮测试评论列表API...</div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">浏览器信息</div>
+            <div id="browserInfo" class="result info"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8081/api';
+
+        // 显示浏览器信息
+        function showBrowserInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                currentURL: window.location.href
+            };
+
+            document.getElementById('browserInfo').textContent = JSON.stringify(info, null, 2);
+        }
+
+        // 检查服务器状态
+        async function checkServerStatus() {
+            const resultDiv = document.getElementById('serverResult');
+            const statusSpan = document.getElementById('serverStatus');
+
+            try {
+                resultDiv.textContent = '正在检查服务器状态...';
+                resultDiv.className = 'result info';
+
+                const response = await fetch(`${API_BASE}/story/list`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+
+                if (response.ok) {
+                    statusSpan.textContent = '在线';
+                    statusSpan.className = 'status online';
+                    resultDiv.textContent = `✅ 服务器连接成功！\n状态码: ${response.status}\n响应头: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    statusSpan.textContent = '错误';
+                    statusSpan.className = 'status offline';
+                    resultDiv.textContent = `❌ 服务器响应错误\n状态码: ${response.status}\n状态文本: ${response.statusText}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                statusSpan.textContent = '离线';
+                statusSpan.className = 'status offline';
+                resultDiv.textContent = `❌ 连接失败\n错误信息: ${error.message}\n\n可能的原因:\n1. 后端服务未启动\n2. 端口8081被占用\n3. 跨域问题\n4. 网络连接问题`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 测试小说列表API
+        async function testStoryList() {
+            const resultDiv = document.getElementById('storyResult');
+
+            try {
+                resultDiv.textContent = '正在测试小说列表API...';
+                resultDiv.className = 'result info';
+
+                const response = await fetch(`${API_BASE}/story/list`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+
+                const result = await response.json();
+
+                resultDiv.textContent = `✅ API测试成功！\n\n请求URL: ${API_BASE}/story/list\n响应状态: ${response.status}\n响应数据:\n${JSON.stringify(result, null, 2)}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `❌ API测试失败\n\n错误信息: ${error.message}\n请求URL: ${API_BASE}/story/list`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 测试章节列表API
+        async function testChapterList() {
+            const resultDiv = document.getElementById('chapterResult');
+
+            try {
+                resultDiv.textContent = '正在测试章节列表API...';
+                resultDiv.className = 'result info';
+
+                const response = await fetch(`${API_BASE}/catalog/chapters/1`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+
+                const result = await response.json();
+
+                resultDiv.textContent = `✅ API测试成功！\n\n请求URL: ${API_BASE}/catalog/chapters/1\n响应状态: ${response.status}\n响应数据:\n${JSON.stringify(result, null, 2)}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `❌ API测试失败\n\n错误信息: ${error.message}\n请求URL: ${API_BASE}/catalog/chapters/1`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 测试评论列表API
+        async function testCommentList() {
+            const resultDiv = document.getElementById('commentResult');
+
+            try {
+                resultDiv.textContent = '正在测试评论列表API...';
+                resultDiv.className = 'result info';
+
+                const response = await fetch(`${API_BASE}/comment/list/1`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+
+                const result = await response.json();
+
+                resultDiv.textContent = `✅ API测试成功！\n\n请求URL: ${API_BASE}/comment/list/1\n响应状态: ${response.status}\n响应数据:\n${JSON.stringify(result, null, 2)}`;
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `❌ API测试失败\n\n错误信息: ${error.message}\n请求URL: ${API_BASE}/comment/list/1`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            showBrowserInfo();
+            checkServerStatus();
+        });
+    </script>
+</body>
+</html>

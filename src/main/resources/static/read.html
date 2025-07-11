@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说阅读</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f6f7f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 40px 30px 30px 30px;
+        }
+        .chapter-title {
+            font-size: 2em;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .chapter-content {
+            font-size: 1.18em;
+            color: #333;
+            line-height: 2.1;
+            white-space: pre-wrap;
+            min-height: 300px;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 30px;
+            background: #667eea;
+            color: #fff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .back-btn:hover {
+            background: #5a6fd8;
+        }
+        .loading, .error {
+            text-align: center;
+            color: #888;
+            padding: 40px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="back-btn" onclick="goBack()">← 返回章节列表</button>
+        <div class="chapter-title" id="chapterTitle">加载中...</div>
+        <div class="chapter-content" id="chapterContent">正在加载内容...</div>
+    </div>
+    <script>
+        const API_BASE = 'http://localhost:8081/api';
+        // 获取URL参数
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        // 返回上一页
+        function goBack() {
+            window.history.back();
+        }
+        // 加载章节内容
+        async function loadChapterContent() {
+            const chapterId = getUrlParameter('chapterId');
+            const chapterTitle = getUrlParameter('chapterTitle');
+            document.getElementById('chapterTitle').textContent = chapterTitle || '章节';
+            if (!chapterId) {
+                document.getElementById('chapterContent').innerHTML = '<div class="error">缺少章节ID</div>';
+                return;
+            }
+            try {
+                const response = await fetch(`${API_BASE}/article/byCatalog?catalogId=${encodeURIComponent(chapterId)}`);
+                const result = await response.json();
+                if (result.code === 200 && result.data) {
+                    document.getElementById('chapterContent').textContent = result.data.context || '暂无内容';
+                } else {
+                    document.getElementById('chapterContent').innerHTML = '<div class="error">未找到章节内容</div>';
+                }
+            } catch (error) {
+                document.getElementById('chapterContent').innerHTML = `<div class="error">加载失败：${error.message}</div>`;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadChapterContent);
+    </script>
+</body>
+</html> 
